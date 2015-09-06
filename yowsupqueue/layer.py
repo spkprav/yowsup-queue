@@ -18,11 +18,11 @@ class QueueLayer(YowInterfaceLayer):
     EVENT_SEND_MESSAGE = "org.openwhatsapp.yowsup.prop.queue.sendmessage"
     EVENT_SEND_IMAGE = "org.openwhatsapp.yowsup.prop.queue.sendimage"
 
-    def __init__(self, beanstalkStack):
+    def __init__(self, sendQueue):
         super(QueueLayer, self).__init__()
         YowInterfaceLayer.__init__(self)
         self.connected = False
-        self.beanstalkStack = beanstalkStack
+        self.sendQueue = sendQueue
 
 
     def assertConnected(self):
@@ -83,7 +83,8 @@ class QueueLayer(YowInterfaceLayer):
             "number": message.getFrom()
         }
 
-        self.beanstalkStack.sendMessage(retItem)
+        #self.sendQueue.sendMessage(retItem)
+        self.sendQueue.put(retItem)
         self.output("Received Message from %s : %s" % (messageProtocolEntity.getFrom(), messageBody))
         #self.toLower(receipt)
         # self.toLower(outgoingMessageProtocolEntity)
@@ -95,9 +96,7 @@ class QueueLayer(YowInterfaceLayer):
     def onSuccess(self, entity):
         self.output("Sucessfully Connected..")
         self.connected = True
-        self.beanstalkStack.daemon = True
-        self.beanstalkStack.setStack(self)
-        self.beanstalkStack.start()
+
 
     @ProtocolEntityCallback("notification")
     def onNotification(self, notification):
@@ -203,10 +202,3 @@ class QueueLayer(YowInterfaceLayer):
 
         print(str)
 
-    def sendMessage(self, number, msg):
-        #self.output(msg)
-        #self.output(number)
-        self.getStack().broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_MESSAGE, msg=msg, number=number))
-
-    def sendImage(self, number, path):
-        self.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_IMAGE, path=path, number=number))

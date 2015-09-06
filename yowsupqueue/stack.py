@@ -8,6 +8,9 @@ from yowsup.layers.auth import AuthError
 
 from .layer import QueueLayer
 from yowsupqueue.beanstalkstack import BeanstalkStack
+#import Queue.Queue
+#from Queue import queue
+from axolotl.duplicatemessagexception import DuplicateMessageException
 
 class QueueStack():
     def __init__(self):
@@ -20,35 +23,43 @@ class QueueStack():
         credentials = (yowsupConfig["Username"], yowsupConfig["Password"])  # replace with your phone and password
 
 
+        sendQueue = queue.Queue()
 
-        beanstalkdConfig = config['Beanstalkd']
-        beanstalkdStack = BeanstalkStack()
-        self.beanstalkStack = beanstalkdStack
+
+
+
+
+
         stackBuilder = YowStackBuilder()
         self.stack = stackBuilder \
             .pushDefaultLayers(True) \
-            .push(QueueLayer(self.beanstalkStack)) \
+            .push(QueueLayer(sendQueue)) \
             .build()
 
-        self.beanstalkStack.setConnectParams(beanstalkdConfig["Host"], beanstalkdConfig["Port"])
 
+        beanstalkdConfig = config['Beanstalkd']
+        beanstalkdStack = BeanstalkStack()
+        beanstalkdStack.setConnectParams(beanstalkdConfig["Host"], beanstalkdConfig["Port"],sendQueue,self.stack)
 
-
-
-
-
+        beanstalkdStack.daemon = True
+        beanstalkdStack.start()
 
 
         self.stack.setCredentials(credentials)
         connectEvent = YowLayerEvent(YowNetworkLayer.EVENT_STATE_CONNECT)
         self.stack.broadcastEvent(connectEvent)
 
-        try:
-
-            #self.stack.loop(timeout = 0.5, discrete = 0.5)
-            self.stack.loop(timeout = 0.5)
-        except AuthError as e:
-            print("Auth Error, reason %s" % e)
+        while 1:
+            try:
+                #self.stack.loop(timeout = 0.5, discrete = 0.5)
+                self.stack.loop(timeout = 0.5)
+            except AuthError as e:
+                print("Auth Error, reason %s" % e)
+            # Bugfix for : https://github.com/tgalal/yowsup/issues/978
+            except DuplicateMessageException as e:
+                print('Please delete .yowsup/<yournumber>/axolotl.db')
+                break
+                pass
 
 
 
