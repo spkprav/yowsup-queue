@@ -7,7 +7,19 @@ Install & Configure the yowsup2 CLI Demo.
 
 Use yowsup-cli to register a Number. 
 
-Install or use a Beanstalkd Server. 
+Install or use a Beanstalkd Server.
+ 
+###Installation(on Ubuntu):
+
+```bash
+sudo apt-get install pip3 python3-dev
+
+pip3 install pystalkd
+
+pip3 install git+https://github.com/tgalal/yowsup@master
+
+```
+
 
 ###Configuration:
 
