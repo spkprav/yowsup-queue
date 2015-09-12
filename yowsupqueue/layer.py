@@ -11,6 +11,7 @@ from yowsup.layers.network import YowNetworkLayer
 from yowsup.layers import YowLayerEvent
 
 from yowsup.layers.protocol_notifications.protocolentities.notification_picture_set import SetPictureNotificationProtocolEntity
+from yowsup.layers.protocol_notifications.protocolentities.notification_picture_delete import DeletePictureNotificationProtocolEntity
 
 class QueueLayer(YowInterfaceLayer):
     PROP_RECEIPT_AUTO = "org.openwhatsapp.yowsup.prop.cli.autoreceipt"
@@ -110,6 +111,9 @@ class QueueLayer(YowInterfaceLayer):
         #self.toLower(receipt)
 
         if not isinstance(notification,SetPictureNotificationProtocolEntity):
+            return
+        if not isinstance(notification,DeletePictureNotificationProtocolEntity):
+            return
             self.toLower(notification.ack())
         pass
 
