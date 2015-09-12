@@ -82,7 +82,8 @@ class QueueLayer(YowInterfaceLayer):
             messageBody = "Error : Unknown message type %s " % message.getType()
         retItem = {
             "body": messageBody,
-            "number": message.getFrom()
+            "address": message.getFrom(),
+            "type":'simple'
         }
 
         #self.sendQueue.sendMessage(retItem)
