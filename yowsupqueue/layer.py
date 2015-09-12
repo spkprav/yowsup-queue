@@ -114,7 +114,7 @@ class QueueLayer(YowInterfaceLayer):
             return
         if not isinstance(notification,DeletePictureNotificationProtocolEntity):
             return
-            self.toLower(notification.ack())
+        self.toLower(notification.ack())
         pass
 
     def onEvent(self, layerEvent):
