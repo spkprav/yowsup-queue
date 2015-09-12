@@ -132,7 +132,8 @@ class QueueLayer(YowInterfaceLayer):
                 content = layerEvent.getArg("msg")
                 number = layerEvent.getArg("number")
                 self.output("Send Message to %s : %s" % (number, content))
-                jid = self.aliasToJid(number)
+                #jid = self.aliasToJid(number)
+                jid = number
                 outgoingMessageProtocolEntity = TextMessageProtocolEntity(
                     content.encode("utf-8") if sys.version_info >= (3,0) else content,
                     to=jid)
