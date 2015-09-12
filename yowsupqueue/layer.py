@@ -10,6 +10,7 @@ from yowsup.layers.protocol_media.mediauploader import MediaUploader
 from yowsup.layers.network import YowNetworkLayer
 from yowsup.layers import YowLayerEvent
 
+from yowsup.layers.protocol_notifications.protocolentities.notification_picture_set import SetPictureNotificationProtocolEntity
 
 class QueueLayer(YowInterfaceLayer):
     PROP_RECEIPT_AUTO = "org.openwhatsapp.yowsup.prop.cli.autoreceipt"
@@ -107,7 +108,9 @@ class QueueLayer(YowInterfaceLayer):
         #    self.output("From :%s, Type: %s" % (notification.getFrom(), notification.getType()))
         #receipt = OutgoingReceiptProtocolEntity(notification.getId(), notification.getFrom())
         #self.toLower(receipt)
-        self.toLower(notification.ack())
+
+        if type(notification) not in SetPictureNotificationProtocolEntity:
+            self.toLower(notification.ack())
         pass
 
     def onEvent(self, layerEvent):
