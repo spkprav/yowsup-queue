@@ -109,7 +109,7 @@ class QueueLayer(YowInterfaceLayer):
         #receipt = OutgoingReceiptProtocolEntity(notification.getId(), notification.getFrom())
         #self.toLower(receipt)
 
-        if type(notification) not in SetPictureNotificationProtocolEntity:
+        if not isinstance(notification,SetPictureNotificationProtocolEntity):
             self.toLower(notification.ack())
         pass
 
