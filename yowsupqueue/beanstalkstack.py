@@ -3,6 +3,7 @@ import json
 import threading
 import sys
 import traceback
+import time
 
 import queue
 from yowsup.layers import YowLayerEvent
@@ -21,6 +22,7 @@ class BeanstalkStack(threading.Thread):
         self.beanstalk = Connection(host=self.host, port=int(self.port))
         self.beanstalk.watch('whatsapp-send')
         while 1:
+            time.sleep(1)
             job = self.beanstalk.reserve(0.05)
             if not job is None:
                 try:
@@ -37,6 +39,8 @@ class BeanstalkStack(threading.Thread):
                 except Exception as e:
                     job.bury()
                     traceback.print_exc()
+            else:
+                time.sleep(60)
             try:
                 messageToSend = self.sendQueue.get(True, 0.05)
                 self.sendMessage2BeanStalkd(messageToSend)
