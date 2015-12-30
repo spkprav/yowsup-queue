@@ -1,5 +1,6 @@
 import sys
 import os
+import datetime
 
 from yowsup.layers.interface import YowInterfaceLayer, ProtocolEntityCallback
 from yowsup.layers.protocol_receipts.protocolentities import *
@@ -83,7 +84,8 @@ class QueueLayer(YowInterfaceLayer):
         retItem = {
             "body": messageBody,
             "address": message.getFrom(),
-            "type":'simple'
+            "type":'simple',
+            "timestamp": str(datetime.datetime.utcnow())
         }
 
         #self.sendQueue.sendMessage(retItem)
