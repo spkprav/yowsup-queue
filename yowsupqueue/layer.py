@@ -11,6 +11,8 @@ from yowsup.layers.protocol_media.mediauploader import MediaUploader
 from yowsup.layers.network import YowNetworkLayer
 from yowsup.layers import YowLayerEvent
 
+
+
 from yowsup.layers.protocol_notifications.protocolentities.notification_picture_set import SetPictureNotificationProtocolEntity
 from yowsup.layers.protocol_notifications.protocolentities.notification_picture_delete import DeletePictureNotificationProtocolEntity
 
@@ -130,11 +132,11 @@ class QueueLayer(YowInterfaceLayer):
             self.getStack().broadcastEvent(connectEvent)
 
         if self.assertConnected():
+
             if layerEvent.getName() == self.__class__.EVENT_SEND_MESSAGE:
                 content = layerEvent.getArg("msg")
                 number = layerEvent.getArg("number")
                 self.output("Send Message to %s : %s" % (number, content))
-                #jid = self.aliasToJid(number)
                 jid = number
                 outgoingMessageProtocolEntity = TextMessageProtocolEntity(
                     content.encode("utf-8") if sys.version_info >= (3,0) else content,
@@ -143,12 +145,15 @@ class QueueLayer(YowInterfaceLayer):
             if layerEvent.getName() == self.__class__.EVENT_SEND_IMAGE:
                 path = layerEvent.getArg("path")
                 number = layerEvent.getArg("number")
-                jid = self.aliasToJid(number)
+                caption = layerEvent.getArg("msg")
+                jid = number
+                #path = "/var/www/yowsup-queue-php-api/examples/testimage.jpg"
+                self.output("Trying to send Image %s " % path)
+
                 entity = RequestUploadIqProtocolEntity(RequestUploadIqProtocolEntity.MEDIA_TYPE_IMAGE, filePath=path)
-                successFn = lambda successEntity, originalEntity: self.onRequestUploadResult(jid, path, successEntity,
-                                                                                         originalEntity)
-                errorFn = lambda errorEntity, originalEntity: self.onRequestUploadError(jid, path, errorEntity,
-                                                                                    originalEntity)
+                successFn = lambda successEntity, originalEntity: self.onRequestUploadResult(jid, path, successEntity, originalEntity, caption)
+                errorFn = lambda errorEntity, originalEntity: self.onRequestUploadError(jid, path, errorEntity, originalEntity)
+
                 self._sendIq(entity, successFn, errorFn)
 
     def getMediaMessageBody(self, message):
@@ -171,28 +176,35 @@ class QueueLayer(YowInterfaceLayer):
         jid = "%s@s.whatsapp.net" % calias
         return jid
 
-    def onRequestUploadResult(self, jid, filePath, resultRequestUploadIqProtocolEntity,
-                              requestUploadIqProtocolEntity):
+    def onRequestUploadResult(self, jid, filePath, resultRequestUploadIqProtocolEntity, requestUploadIqProtocolEntity, caption = None):
+
+        if requestUploadIqProtocolEntity.mediaType == RequestUploadIqProtocolEntity.MEDIA_TYPE_AUDIO:
+            doSendFn = self.doSendAudio
+        else:
+            doSendFn = self.doSendImage
 
         if resultRequestUploadIqProtocolEntity.isDuplicate():
-            self.doSendImage(filePath, resultRequestUploadIqProtocolEntity.getUrl(), jid,
-                             resultRequestUploadIqProtocolEntity.getIp())
+            doSendFn(filePath, resultRequestUploadIqProtocolEntity.getUrl(), jid,
+                             resultRequestUploadIqProtocolEntity.getIp(), caption)
         else:
-            # successFn = lambda filePath, jid, url: self.onUploadSuccess(filePath, jid, url, resultRequestUploadIqProtocolEntity.getIp())
+            successFn = lambda filePath, jid, url: doSendFn(filePath, url, jid, resultRequestUploadIqProtocolEntity.getIp(), caption)
             mediaUploader = MediaUploader(jid, self.getOwnJid(), filePath,
-                                          resultRequestUploadIqProtocolEntity.getUrl(),
-                                          resultRequestUploadIqProtocolEntity.getResumeOffset(),
-                                          self.onUploadSuccess, self.onUploadError, self.onUploadProgress,
-                                          async=False)
+                                      resultRequestUploadIqProtocolEntity.getUrl(),
+                                      resultRequestUploadIqProtocolEntity.getResumeOffset(),
+                                      successFn, self.onUploadError, self.onUploadProgress, async=False)
             mediaUploader.start()
+
+    def doSendAudio(self, filePath, url, to, ip = None, caption = None):
+        entity = AudioDownloadableMediaMessageProtocolEntity.fromFilePath(filePath, url, ip, to)
+        self.toLower(entity)
 
     def onRequestUploadError(self, jid, path, errorRequestUploadIqProtocolEntity,
                              requestUploadIqProtocolEntity):
 
         self.output("Request upload for file %s for %s failed" % (path, jid))
 
-    def doSendImage(self, filePath, url, to, ip=None):
-        entity = ImageDownloadableMediaMessageProtocolEntity.fromFilePath(filePath, url, ip, to)
+    def doSendImage(self, filePath, url, to, ip = None, caption = None):
+        entity = ImageDownloadableMediaMessageProtocolEntity.fromFilePath(filePath, url, ip, to, caption = caption)
         self.toLower(entity)
 
     def onUploadSuccess(self, filePath, jid, url):

@@ -8,8 +8,8 @@ import time
 import queue
 from yowsup.layers import YowLayerEvent
 from yowsupqueue.layer import QueueLayer
-
-
+import tempfile
+import base64
 class BeanstalkStack(threading.Thread):
     def setConnectParams(self, host, port, sendQueue,yowsUpStack):
         self.host = host
@@ -31,6 +31,9 @@ class BeanstalkStack(threading.Thread):
                     if message["type"] == "simple":
                         print(messageBody)
                         self.sendMessageToWhatsapp(message["address"], message["body"])
+                    elif message["type"] == "image":
+                        self.sendImage(message["address"], message["image"])
+                        pass
                     else:
                         raise Exception("Unrecognized Message: %s" % message)
                     print("Sucessfully sended Message")
@@ -40,7 +43,7 @@ class BeanstalkStack(threading.Thread):
                     job.bury()
                     traceback.print_exc()
             else:
-                time.sleep(60)
+                time.sleep(1)
             try:
                 messageToSend = self.sendQueue.get(True, 0.05)
                 self.sendMessage2BeanStalkd(messageToSend)
@@ -61,6 +64,10 @@ class BeanstalkStack(threading.Thread):
         #self.output(number)
         self.yowsUpStack.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_MESSAGE, msg=msg, number=number))
 
-    #def sendImage(self, number, path):
-    #   self.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_IMAGE, path=path, number=number))
+    def sendImage(self, number, imgData):
+        data = base64.b64decode(imgData)
+        tf = tempfile.NamedTemporaryFile(prefix="yowsup-queue-tmp",suffix='.jpg',delete=False)
+        tf.write(data)
+        tf.close()
+        self.yowsUpStack.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_IMAGE, path=tf.name, number=number))
 

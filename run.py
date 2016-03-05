@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from yowsupqueue.stack import QueueStack
 
 import configparser

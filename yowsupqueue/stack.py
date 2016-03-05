@@ -2,6 +2,7 @@ import queue
 import threading
 
 from yowsup.layers.network import YowNetworkLayer
+from yowsup.layers.protocol_media import YowMediaProtocolLayer
 from yowsup.layers import YowLayerEvent
 from yowsup.stacks import YowStackBuilder
 from yowsup.layers.auth import AuthError
@@ -34,6 +35,7 @@ class QueueStack():
         self.stack = stackBuilder \
             .pushDefaultLayers(True) \
             .push(QueueLayer(sendQueue)) \
+            .push(YowMediaProtocolLayer) \
             .build()
 
 
