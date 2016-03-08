@@ -64,10 +64,5 @@ class BeanstalkStack(threading.Thread):
         #self.output(number)
         self.yowsUpStack.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_MESSAGE, msg=msg, number=number))
 
-    def sendImage(self, number, imgData):
-        data = base64.b64decode(imgData)
-        tf = tempfile.NamedTemporaryFile(prefix="yowsup-queue-tmp",suffix='.jpg',delete=False)
-        tf.write(data)
-        tf.close()
-        self.yowsUpStack.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_IMAGE, path=tf.name, number=number))
-
+    def sendImage(self, number, imgPath):
+        self.yowsUpStack.broadcastEvent(YowLayerEvent(name=QueueLayer.EVENT_SEND_IMAGE, path=imgPath, number=number))
