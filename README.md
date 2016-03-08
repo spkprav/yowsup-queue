@@ -71,17 +71,3 @@ Fix it using:
 ```
 
 #### On First Run,its not running well after the generation of the Keys. Please restart it.
-
-### Sending Images
-
-For sending Images,you will need to increase the maximum Job Size for beanstalkd.
- Add -z bytes to the
-On Ubuntu,edit the File //etc/default/beanstalkd
-add "-z <bytes>" to BEANSTALKD_EXTRA="" line.
-
-use a value like 2000000(2 megabytes)
-
-Credits go to:
-http://stackoverflow.com/questions/29199302/job-too-big-pheanstalk-what-can-be-done
-
-Warning: Currently big Images are not supported due to a Bug. I suppose that it has someting to do with the beanstalkd-client.
